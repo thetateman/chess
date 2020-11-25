@@ -1,5 +1,4 @@
-// chess.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
+
 
 #include <iostream>
 #include <string>
@@ -10,7 +9,7 @@
 
 using namespace std;
 
-int initBoard(vector<vector<square>> *inputBoard) // initialize all the pieces in thier original locations
+int initBoard(vector<vector<square>> *inputBoard) // initialize all the pieces in their original locations
 {
 	for (int i = 0; i < 8; ++i)  //initialize white pawns
 	{
@@ -78,17 +77,51 @@ int initBoard(vector<vector<square>> *inputBoard) // initialize all the pieces i
 
 int printBoard(vector<vector<square>> inputBoard)
 {
+	printf("\n");
 	for (int i = 7; i >= 0; --i)
 	{
-		for (int j = 7; j >= 0; --j)
+		printf("%i |  ", i + 1);
+		for (int j = 0; j < 8; ++j)
 		{
 			char printablePiece = inputBoard[i][j].getPiece();
-			printf("%c  ", printablePiece);
+			printf("%c   ", printablePiece);
 		}
-		printf("\n\n");
+		printf("\n  |\n");
 	}
+	printf("______________________________________\n");
+	printf("     a   b   c   d   e   f   g   h\n");
+	printf("\n");
 	return 0;
 }
+bool isValidMove(int startCo[], int endCo[], vector<vector<square>> inputBoard, bool whitesTurn)
+{
+	
+	square *startingSquare = &(inputBoard[startCo[0]][startCo[1]]);
+	if (startingSquare->getPiece() == EMPTY)  //check if piece exists in square
+	{
+		printf("no piece on that square.\n");
+		return false;
+	}
+	//check if square contains right color piece.
+	else if ((whitesTurn && startingSquare->getColor() == 'b') || (!whitesTurn && startingSquare->getColor() == 'w'))
+	{
+		printf("You don't have a piece on that square.\n");
+		return false;
+	}
+
+	//check for obstructions
+
+	return true;
+}
+
+int generateMoveSet(int startingCo[2], char pieceChar, vector<vector<int>> *moveSet)
+{
+
+
+
+	return 0; //number of possible moves
+}
+
 int main()
 {
 	bool running = true;
@@ -96,8 +129,12 @@ int main()
 	bool whitesTurn = true;
 	string moveEntry = "";
 	square newSquare;
-	vector<vector<square>> board(8, vector<square> (8, newSquare));
+	vector<vector<square>> board(8, vector<square> (8, newSquare));   // accessed with [row][column]
 	initBoard(&board);
+
+	printf("Hello, welcome to Chess!\nLicensed under GPL (GNU General Public License) in 2020 by Tate Smith & Reed Smith.\n\n");
+
+	printf("Input moves in the format \"coordinates of piece\"(space)\"target coordinates\". Coordinates should be in the format \"column\"\"row\".\n\n\n");
 	while (running)
 	{
 		if (whitesTurn)
@@ -110,22 +147,52 @@ int main()
 		}
 		
 		getline(cin, moveEntry);
+
+		if (moveEntry.length() != 5)
+		{
+			printf("Please use the right move format.\n");
+			continue;
+		}
+		else if ((moveEntry.at(0) < 'a') || (moveEntry.at(0) > 'h') || (moveEntry.at(1) < '1') || (moveEntry.at(1) > '8'))
+		{
+			printf("Please enter starting coordinates in the right format.\n");
+			continue;
+		}
+		else if ((moveEntry.at(3) < 'a') || (moveEntry.at(3) > 'h') || (moveEntry.at(4) < '1') || (moveEntry.at(4) > '8'))
+		{
+			printf("Please enter target coordinates in the right format.\n");
+			continue;
+
+		}
+		int startCo[] = { moveEntry.at(1) - 49, moveEntry.at(0) - 97 };
+		int endCo[] = { moveEntry.at(4) - 49, moveEntry.at(3) - 97 };
+
+		square* startSquare = &(board[startCo[0]][startCo[1]]);
+
+		vector<vector<int>> moveSet;
+		generateMoveSet(startCo, startSquare->getPiece(), &moveSet);
+
+
+		if (!isValidMove(startCo, endCo, board, whitesTurn))
+		{
+			printf("That is not a valid move.\n");
+			continue;
+		}
+
+		printf("%i    %i\n", startCo[0], startCo[1]);
+		//empty starting square and fill new square
 		
-		
+		board[endCo[0]][endCo[1]].setColor(startSquare->getColor());
+		board[endCo[0]][endCo[1]].setPiece(startSquare->getPiece());
+		startSquare->setColor(EMPTY);
+		startSquare->setPiece(EMPTY);
+
 		printBoard(board);
+		whitesTurn = !whitesTurn;
+		++turnCounter;
 		
 	}
 
 
 }
 
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
-
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file

@@ -1,0 +1,13 @@
+1. Complete generateMoveSet()
+
+	-Check for obstructions
+
+2. Use generateMoveSet() to check player input
+
+3. implement castleing/ en passent/ piece exchange/check requirements
+
+4. check for win condition/draw condition
+
+5. upgrade ui
+
+6. add computerized input
