@@ -1,6 +1,6 @@
 #pragma once
 
-const char EMPTY = 'u';
+const char EMPTY = '.';
 class square
 {
 private:

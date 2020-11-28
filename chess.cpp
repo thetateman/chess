@@ -140,7 +140,7 @@ int generateMoveSet(int startingCo[2], bool whitesTurn, vector<vector<square>> i
 
 	vector<int> move(2);
 	char piece = startingSquare->getPiece();
-	printf("entering switch");
+	//printf("entering switch");
 	switch (piece)
 	{
 	case 'N':
@@ -684,6 +684,108 @@ int generateMoveSet(int startingCo[2], bool whitesTurn, vector<vector<square>> i
 
 	return moveSet->size(); //number of possible moves -- unsigned int
 }
+void checkChecker(vector<vector<square>> board, bool whitesTurn, bool* whiteInCheck, bool* blackInCheck)
+{
+	int kingCoord[2];
+	square kingSquare;
+	bool hitKing = false;
+	for (unsigned int i = 0; i < board.size() && !hitKing; ++i)
+	{
+		for (unsigned int j = 0; j < board.at(i).size(); ++j)
+		{
+			//printf("looping %i   %i\n", i, j);
+			if (whitesTurn)
+			{
+				if (board.at(i).at(j).getPiece() == 'K' && board.at(i).at(j).getColor() == 'w')
+				{
+					kingSquare = board.at(i).at(j);
+					kingCoord[0] = i;
+					kingCoord[1] = j;
+					hitKing = true;
+					break;
+				}
+			}
+			else
+			{
+				if (board.at(i).at(j).getPiece() == 'K' && board.at(i).at(j).getColor() == 'b')
+				{
+					kingSquare = board.at(i).at(j);
+					kingCoord[0] = i;
+					kingCoord[1] = j;
+					hitKing = true;
+					break;
+				}
+			}
+		}
+	}
+	bool hit = false;
+	for (unsigned int i = 0; i < board.size() && !hit; ++i)
+	{
+		for (unsigned int j = 0; j < board.at(i).size() && !hit; ++j)
+		{
+			//printf("2looping %i   %i\n", i, j);
+			if (((board.at(i).at(j).getColor() == 'b' && whitesTurn) || (board.at(i).at(j).getColor() == 'w' && !whitesTurn)))
+			{
+				int startingCoord[] = { (int)i, (int)j };
+				vector<vector<int>> tempMoveSet;
+				//printf("test");
+				generateMoveSet(startingCoord, !whitesTurn, board, &tempMoveSet);
+				for (unsigned int k = 0; k < tempMoveSet.size() && !hit; ++k)
+				{
+					//printf("3looping   %i\n", k);
+					if (tempMoveSet.at(k).at(0) == kingCoord[0] && tempMoveSet.at(k).at(1) == kingCoord[1])
+					{
+						if (whitesTurn)
+						{
+							*whiteInCheck = true;
+							hit = true;
+						}
+						else
+						{
+							*blackInCheck = true;
+							hit = true;
+						}
+					}
+				}
+			}
+
+		}
+	}
+}
+
+bool checkMate(vector<vector<square>> inputBoard, bool whitesTurn)
+{
+	for (unsigned int i = 0; i < inputBoard.size(); ++i)
+	{
+		for (unsigned int j = 0; j < inputBoard.at(i).size(); ++j)
+		{
+			if (((inputBoard.at(i).at(j).getColor() == 'w' && whitesTurn) || (inputBoard.at(i).at(j).getColor() == 'b' && !whitesTurn)))
+			{
+				vector<vector<int>> moveSet;
+				int startingCoord[] = { (int)i, (int)j };
+				generateMoveSet(startingCoord, whitesTurn, inputBoard, &moveSet);
+				for (unsigned int k = 0; k < moveSet.size(); ++k)
+				{
+					vector<vector<square>> tempBoard = inputBoard;
+					square* startSquareTemp = &(tempBoard[i][j]);
+					tempBoard[moveSet.at(k).at(0)][moveSet.at(k).at(1)].setColor(startSquareTemp->getColor());
+					tempBoard[moveSet.at(k).at(0)][moveSet.at(k).at(1)].setPiece(startSquareTemp->getPiece());
+					startSquareTemp->setColor(EMPTY);
+					startSquareTemp->setPiece(EMPTY);
+					bool whiteInCheckTest = false;
+					bool blackInCheckTest = false;
+					checkChecker(tempBoard, whitesTurn, &whiteInCheckTest, &blackInCheckTest);
+					if (!((whiteInCheckTest && whitesTurn) || (blackInCheckTest && !whitesTurn)))
+					{
+						//found move resulting in no check, not checkmate
+						return false;
+					}
+				}
+			}
+		}
+	}
+	return true;
+}
 
 int main()
 {
@@ -703,83 +805,36 @@ int main()
 	{
 		bool whiteInCheck = false;
 		bool blackInCheck = false;
-		int kingCoord[2];
-		square kingSquare;
-		bool hitKing = false;
-		for (unsigned int i = 0; i < board.size() && !hitKing; ++i)
-		{
-			for (unsigned int j = 0; j < board.at(i).size(); ++j)
-			{
-				//printf("looping %i   %i\n", i, j);
-				if (whitesTurn)
-				{
-					if (board.at(i).at(j).getPiece() == 'K' && board.at(i).at(j).getColor() == 'w')
-					{
-						kingSquare = board.at(i).at(j);
-						kingCoord[0] = i;
-						kingCoord[1] = j;
-						hitKing = true;
-						break;
-					}
-				}
-				else
-				{
-					if (board.at(i).at(j).getPiece() == 'K' && board.at(i).at(j).getColor() == 'b')
-					{
-						kingSquare = board.at(i).at(j);
-						kingCoord[0] = i;
-						kingCoord[1] = j;
-						hitKing = true;
-						break;
-					}
-				}
-			}
-		}
-		bool hit = false;
-		for (unsigned int i = 0; i < board.size() && !hit; ++i)
-		{
-			for (unsigned int j = 0; j < board.at(i).size() && !hit; ++j)
-			{
-				//printf("2looping %i   %i\n", i, j);
-				if (((board.at(i).at(j).getColor() == 'b' && whitesTurn) || (board.at(i).at(j).getColor() == 'w' && !whitesTurn)))
-				{
-					int startingCoord[] = { (int)i, (int)j };
-					vector<vector<int>> tempMoveSet;
-					//printf("test");
-					generateMoveSet(startingCoord, !whitesTurn, board, &tempMoveSet);
-					for (unsigned int k = 0; k < tempMoveSet.size() && !hit; ++k)
-					{
-						//printf("3looping   %i\n", k);
-						if (tempMoveSet.at(k).at(0) == kingCoord[0] && tempMoveSet.at(k).at(1) == kingCoord[1])
-						{
-							if (whitesTurn)
-							{
-								whiteInCheck = true;
-								hit = true;
-							}
-							else
-							{
-								blackInCheck = true;
-								hit = true;
-							}
-						}
-					}
-				}
-
-			}
-		}
+		checkChecker(board, whitesTurn, &whiteInCheck, &blackInCheck);
+		
 		if (whitesTurn)
 		{
 			if (whiteInCheck)
 			{
-				printf("CHECK\n");
+				if (checkMate(board, whitesTurn))
+				{
+					printf("CHECKMATE!\n\nBlack wins!");
+					return 1;
+				}
+				else
+				{
+					printf("CHECK\n");
+				}
 			}
 		}
 		else
 		{
 			if (blackInCheck)
 			{
-				printf("CHECK\n");
+				if (checkMate(board, whitesTurn))
+				{
+					printf("CHECKMATE!\n\nWhite wins!");
+					return 0;
+				}
+				else
+				{
+					printf("CHECK\n");
+				}
 			}
 		}
 		if (whitesTurn)
@@ -792,6 +847,7 @@ int main()
 		}
 		
 		getline(cin, moveEntry);
+		//add castleing
 
 		if (moveEntry.length() != 5)
 		{
@@ -813,6 +869,7 @@ int main()
 		int endCo[] = { moveEntry.at(4) - 49, moveEntry.at(3) - 97 };
 
 		square* startSquare = &(board[startCo[0]][startCo[1]]);
+		
 
 
 
@@ -826,16 +883,34 @@ int main()
 		//printf("%i, %i\n", moveSet.at(0).at(0), moveSet.at(0).at(1));
 
 		//DEBUG: print move set
+		/*
 		for (unsigned int i = 0; i < moveSet.size(); ++i)
 		{
 			printf("%i, %i\n", moveSet.at(i).at(0), moveSet.at(i).at(1));
 		}
+		*/
 
 		if (!isValidMove(startCo, endCo, board, whitesTurn, moveSet))
 		{
 			printf("That is not a valid move.\n");
 			continue;
 		}
+
+		vector<vector<square>> tempBoard = board;
+		square* startSquareTemp = &(tempBoard[startCo[0]][startCo[1]]);
+		tempBoard[endCo[0]][endCo[1]].setColor(startSquareTemp->getColor());
+		tempBoard[endCo[0]][endCo[1]].setPiece(startSquareTemp->getPiece());
+		startSquareTemp->setColor(EMPTY);
+		startSquareTemp->setPiece(EMPTY);
+		bool whiteInCheckTest = false;
+		bool blackInCheckTest = false;
+		checkChecker(tempBoard, whitesTurn, &whiteInCheckTest, &blackInCheckTest);
+		if ((whiteInCheckTest && whitesTurn) || (blackInCheckTest && !whitesTurn))
+		{
+			printf("that move would result in check, pick another move.");
+			continue;
+		}
+
 
 		//printf("%i    %i\n", startCo[0], startCo[1]);
 		//empty starting square and fill new square
